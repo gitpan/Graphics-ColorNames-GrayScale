@@ -5,7 +5,7 @@ BEGIN { plan tests => 7+(2*4291), todo => [ ] }
 use strict;
 use Carp;
 
-use Graphics::ColorNames::GrayScale 1.00;
+use Graphics::ColorNames::GrayScale 1.01;
 ok(1);
 
 my %table = %{Graphics::ColorNames::GrayScale->NamesRgbTable()};
