@@ -6,7 +6,7 @@ my $build = Module::Build->new
      license => 'perl',
      requires => {
        'perl'                       => '5.6.0',
-       'Graphics::ColorNames'       => 1.01,
+       'Graphics::ColorNames'       => 1.03,
      },
      recommends => {
      },

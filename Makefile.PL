@@ -5,7 +5,7 @@ WriteMakefile
           'NAME' => 'Graphics::ColorNames::GrayScale',
           'VERSION_FROM' => 'lib/Graphics/ColorNames/GrayScale.pm',
           'PREREQ_PM' => {
-                           'Graphics::ColorNames' => '1.01',
+                           'Graphics::ColorNames' => '1.03',
                            'Test' => '0'
                          },
           'INSTALLDIRS' => 'site',

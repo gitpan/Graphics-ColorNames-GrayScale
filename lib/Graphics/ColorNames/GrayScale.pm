@@ -50,61 +50,112 @@ require 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '1.01';
+our $VERSION = '2.00';
 
 my %RgbColors   = ( );
 
-# This is really inefficient. It makes better sense memory-wise to
-# have a subroutine which parses the key and returns a value.  But
-# that's a modification for a future version of Graphics::ColorNames.
+my %Schemes     = ( );
 
 sub NamesRgbTable() {
-  unless (keys %RgbColors) {
-    for my $i (0..255) {
-      my $rgb = ($i << 16) | ($i << 8) | $i;
-      my $dec = sprintf('%03d',$i);
-      my $hex = sprintf('%02x',$i);
-      my $pct = int(($i / 255) * 100) . '%';
+  return sub {
+    my $name = shift;
+    return $RgbColors{$name},
+      if (exists $RgbColors{$name});
 
-      $RgbColors{"gray$dec"} = $rgb;
-      $RgbColors{"gray$hex"} = $rgb;
-      $RgbColors{"gray$pct"} = $rgb,
-	unless (exists $RgbColors{"gray$pct"});
+    if ($name =~ /^(gr[ae]y|red|green|blue|yellow|cyan|purple)([\da-f]+\%?)$/)
+      {
+	my $color  = $1;
+	my $degree = $2;
 
-      $RgbColors{"red$dec"} = ($rgb & 0xff0000);
-      $RgbColors{"red$hex"} = ($rgb & 0xff0000);
-      $RgbColors{"red$pct"} = ($rgb & 0xff0000),
-	unless (exists $RgbColors{"red$pct"});
+	unless (keys %Schemes) {
+	  %Schemes = (
+            gray   => 0xffffff,
+            grey   => 0xffffff,
+            red    => 0xff0000,
+            green  => 0x00ff00,
+            blue   => 0x0000ff,
+            yellow => 0xffff00,
+            cyan   => 0x00ffff,
+            purple => 0xff00ff,
+          );
+	}
 
-      $RgbColors{"green$dec"} = ($rgb & 0x00ff00);
-      $RgbColors{"green$hex"} = ($rgb & 0x00ff00);
-      $RgbColors{"green$pct"} = ($rgb & 0x00ff00),
-	unless (exists $RgbColors{"green$pct"});
+	return, unless (exists $Schemes{$color});
 
-      $RgbColors{"blue$dec"} = ($rgb & 0x0000ff);
-      $RgbColors{"blue$hex"} = ($rgb & 0x0000ff);
-      $RgbColors{"blue$pct"} = ($rgb & 0x0000ff),
-	unless (exists $RgbColors{"blue$pct"});
+	my $byte;
+	if ($degree =~ /^\d{3}$/) {
+	  $byte = $degree;
+	} elsif ($degree =~ /^(\d{1,3})\%$/) {
+	  $byte = int($1 / 100 * 255);
+	} elsif ($degree =~ /^[\da-f]{2}$/) {
+	  $byte = CORE::hex $degree;
+	} else {
+	  return;
+	}
 
-      $RgbColors{"yellow$dec"} = ($rgb & 0xffff00);
-      $RgbColors{"yellow$hex"} = ($rgb & 0xffff00);
-      $RgbColors{"yellow$pct"} = ($rgb & 0xffff00),
-	unless (exists $RgbColors{"yellow$pct"});
+	return, if ($byte > 255);
 
-      $RgbColors{"cyan$dec"} = ($rgb & 0x00ffff);
-      $RgbColors{"cyan$hex"} = ($rgb & 0x00ffff);
-      $RgbColors{"cyan$pct"} = ($rgb & 0x00ffff),
-	unless (exists $RgbColors{"cyan$pct"});
+	my $rgb = $Schemes{$color} & ( ($byte << 16) | ($byte << 8) | $byte );
 
-      $RgbColors{"purple$dec"} = ($rgb & 0xff00ff);
-      $RgbColors{"purple$hex"} = ($rgb & 0xff00ff);
-      $RgbColors{"purple$pct"} = ($rgb & 0xff00ff),
-	unless (exists $RgbColors{"purple$pct"});
+	$RgbColors{$name} = $rgb;
 
+	return $rgb;
+
+      }
+    else {
+      return;
     }
-  }
-  return \%RgbColors;
+  };
 }
+
+
+# sub NamesRgbTable() {
+#   unless (keys %RgbColors) {
+#     for my $i (0..255) {
+#       my $rgb = ($i << 16) | ($i << 8) | $i;
+#       my $dec = sprintf('%03d',$i);
+#       my $hex = sprintf('%02x',$i);
+#       my $pct = int(($i / 255) * 100) . '%';
+
+#       $RgbColors{"gray$dec"} = $rgb;
+#       $RgbColors{"gray$hex"} = $rgb;
+#       $RgbColors{"gray$pct"} = $rgb,
+# 	unless (exists $RgbColors{"gray$pct"});
+
+#       $RgbColors{"red$dec"} = ($rgb & 0xff0000);
+#       $RgbColors{"red$hex"} = ($rgb & 0xff0000);
+#       $RgbColors{"red$pct"} = ($rgb & 0xff0000),
+# 	unless (exists $RgbColors{"red$pct"});
+
+#       $RgbColors{"green$dec"} = ($rgb & 0x00ff00);
+#       $RgbColors{"green$hex"} = ($rgb & 0x00ff00);
+#       $RgbColors{"green$pct"} = ($rgb & 0x00ff00),
+# 	unless (exists $RgbColors{"green$pct"});
+
+#       $RgbColors{"blue$dec"} = ($rgb & 0x0000ff);
+#       $RgbColors{"blue$hex"} = ($rgb & 0x0000ff);
+#       $RgbColors{"blue$pct"} = ($rgb & 0x0000ff),
+# 	unless (exists $RgbColors{"blue$pct"});
+
+#       $RgbColors{"yellow$dec"} = ($rgb & 0xffff00);
+#       $RgbColors{"yellow$hex"} = ($rgb & 0xffff00);
+#       $RgbColors{"yellow$pct"} = ($rgb & 0xffff00),
+# 	unless (exists $RgbColors{"yellow$pct"});
+
+#       $RgbColors{"cyan$dec"} = ($rgb & 0x00ffff);
+#       $RgbColors{"cyan$hex"} = ($rgb & 0x00ffff);
+#       $RgbColors{"cyan$pct"} = ($rgb & 0x00ffff),
+# 	unless (exists $RgbColors{"cyan$pct"});
+
+#       $RgbColors{"purple$dec"} = ($rgb & 0xff00ff);
+#       $RgbColors{"purple$hex"} = ($rgb & 0xff00ff);
+#       $RgbColors{"purple$pct"} = ($rgb & 0xff00ff),
+# 	unless (exists $RgbColors{"purple$pct"});
+
+#     }
+#   }
+#   return \%RgbColors;
+# }
 
 1;
 

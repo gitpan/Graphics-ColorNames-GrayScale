@@ -1,40 +1,39 @@
 use Test;
 
-BEGIN { plan tests => 7+(2*4291), todo => [ ] }
+BEGIN { plan tests => 4 + (8 * 256) + (1 * 101), todo => [ ] }
 
 use strict;
 use Carp;
 
-use Graphics::ColorNames::GrayScale 1.01;
+use Graphics::ColorNames::GrayScale 2.00;
 ok(1);
 
-my %table = %{Graphics::ColorNames::GrayScale->NamesRgbTable()};
-ok(1);
 
-ok(keys %table, 4291);
-
-my $count = 0;
-foreach my $name (keys %table) {
-  ok($table{$name} =~ /^\d+$/);
-}
-
-use Graphics::ColorNames 1.01, qw( hex2tuple tuple2hex );
+use Graphics::ColorNames 1.03, qw( hex2tuple tuple2hex );
 ok(1);
 
 tie my %colors, 'Graphics::ColorNames', 'GrayScale';
 ok(1);
 
-ok(keys %colors, 4291); #
+eval { keys %colors };
+ok($!);
 
-$count = 0;
-foreach my $name (keys %colors)
-  {
-  ok($colors{$name} =~ /^[\da-f]+$/);
-    if ($colors{$name} !~ /^[0-9a-f]+$/) {
-      print STDERR "\x23 ", $name, "\t", $colors{$name}, "\n";
-    }
-    my @RGB = hex2tuple( $colors{$name} );
-    $count++, if (tuple2hex(@RGB) eq $colors{$name} );
-  }
-ok($count, keys %colors);
+for my $i (0..255) {
+  my $dec = sprintf('%03d',$i);
+  my $hex = sprintf('%02x',$i);
+  ok($colors{"gray$dec"} eq $colors{"gray$hex"});
+  ok($colors{"grey$dec"} eq $colors{"gray$hex"});
 
+  my $rgb = hex($colors{"gray$dec"});
+  ok( ($rgb & 0xff0000 )== hex( $colors{"red$dec"} ) );
+  ok( ($rgb & 0x00ff00 )== hex( $colors{"green$dec"} ) );
+  ok( ($rgb & 0x0000ff )== hex( $colors{"blue$dec"} ) );
+  ok( ($rgb & 0x00ffff )== hex( $colors{"cyan$dec"} ) );
+  ok( ($rgb & 0xffff00 )== hex( $colors{"yellow$dec"} ) );
+  ok( ($rgb & 0xff00ff )== hex( $colors{"purple$dec"} ) );
+}
+
+for my $i (0..100) {
+  my $byte = sprintf('%03d', int($i / 100 * 255));
+  ok($colors{"gray$byte"} eq $colors{"gray$i\%"});
+}
